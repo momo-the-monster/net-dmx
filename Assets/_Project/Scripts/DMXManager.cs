@@ -27,7 +27,7 @@ public class DMXManager : MonoBehaviour
     Color _colorDelta;
     bool _reconnect = false;
     static DMXManager instance;
-    private const string defaultGroupName = "main";
+    public const string DefaultGroupName = "main";
 
     // Reconnection
     [SerializeField] private int checkConnectionPeriod = 3;
@@ -53,7 +53,7 @@ public class DMXManager : MonoBehaviour
         foreach (var fixtureDescription in fixtureDescriptions.fixtures)
         {
             // add to default group if group name is blank
-            string groupName = string.IsNullOrEmpty(fixtureDescription.group) ? defaultGroupName : fixtureDescription.group;
+            string groupName = string.IsNullOrEmpty(fixtureDescription.group) ? DefaultGroupName : fixtureDescription.group;
             master.addFixtures(fixtureDescription.name, fixtureDescription.numberChannels, fixtureDescription.startingChannel, groupName);
         }
     }
@@ -113,7 +113,7 @@ public class DMXManager : MonoBehaviour
     /// Send the color to OPPSK - RGBW on channels 4-7
     /// </summary>
     /// <param name="color"></param>
-    public void SendColor(Color color, string name = defaultGroupName)
+    public void SendColor(Color color, string name = DefaultGroupName)
     {
         camera.backgroundColor = color;
         master.updateMainFade(Mathf.RoundToInt(SROptions.Current.FadeTime * 1000));

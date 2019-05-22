@@ -15,11 +15,11 @@ namespace MMM.DMX
         private HttpServer server;
         private bool sendColor = false;
         private Color queuedColor;
+        private string queuedName;
 
         private void OnEnable()
         {
             server = new HttpServer(port);
-            server.AddWebSocketService<DMXBehavior>("/DMX", () =>new DMXBehavior(OnColorReceived));
             server.OnGet += OnServerGet;
             server.Start();
         }
@@ -38,9 +38,14 @@ namespace MMM.DMX
 
             if(endPoint.CompareTo("/off") == 0)
             {
-                OnColorReceived(Color.clear);
+                OnColorReceived(Color.clear, GetNameFromQuery(req.QueryString));
                 res.Close(WebSocketSharp.Net.HttpStatusCode.Accepted);
             }
+        }
+
+        private string GetNameFromQuery(NameValueCollection query)
+        {
+            return query.Contains("name") ? query["name"] : DMXManager.DefaultGroupName;
         }
 
         private void SetColorFromQuery(NameValueCollection query, WebSocketSharp.Net.HttpListenerResponse res)
@@ -48,7 +53,7 @@ namespace MMM.DMX
             if (query.Contains("r") && query.Contains("g") && query.Contains("b") && query.Contains("w"))
             {
                 Color color = new Color32(byte.Parse(query["r"]), byte.Parse(query["g"]), byte.Parse(query["b"]), byte.Parse(query["w"]));
-                OnColorReceived(color);
+                OnColorReceived(color, GetNameFromQuery(query));
 
                 res.StatusCode = 200;
                 res.WriteContent(System.Text.Encoding.UTF8.GetBytes($"Set Color to {color.ToString()}"));
@@ -66,13 +71,14 @@ namespace MMM.DMX
         {
             if (sendColor)
             {
-                dmx.SendColor(queuedColor);
+                dmx.SendColor(queuedColor, queuedName);
                 sendColor = false;
             }
         }
 
-        private void OnColorReceived(Color color)
+        private void OnColorReceived(Color color, string name)
         {
+            queuedName = name;
             queuedColor = color;
             sendColor = true;
         }
@@ -80,39 +86,6 @@ namespace MMM.DMX
         private void OnDisable()
         {
             server.Stop();
-        }
-    }
-
-    public class DMXBehavior: WebSocketBehavior
-    {
-        public Action<Color> ColorReceived;
-
-        public DMXBehavior() : this(null) { }
-        
-        public DMXBehavior (Action<Color> _colorReceived)
-        {
-            ColorReceived = _colorReceived;
-        }
-        
-        protected override void OnOpen()
-        {
-            base.OnOpen();
-        }
-
-        protected override void OnMessage(MessageEventArgs e)
-        {
-            var color = JsonUtility.FromJson<Color>(e.Data);
-            ColorReceived(color);
-        }
-
-        protected override void OnClose(CloseEventArgs e)
-        {
-            Debug.Log($"OnClose: {e}");
-        }
-
-        protected override void OnError(ErrorEventArgs e)
-        {
-            Debug.LogError($"Error: {e.Exception.ToString()} // {e.Message}");
         }
     }
 
