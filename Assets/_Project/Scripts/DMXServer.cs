@@ -20,6 +20,7 @@ namespace MMM.DMX
         private void OnEnable()
         {
             server = new HttpServer(port);
+            server.OnPost += OnServerGet;
             server.OnGet += OnServerGet;
             server.Start();
         }
