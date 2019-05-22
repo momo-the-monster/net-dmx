@@ -28,8 +28,8 @@ namespace MMM.DMX
 
         public void SendColor(Color32 color)
         {
-            UnityWebRequest webRequest = UnityWebRequest.Get(GetQueryForColor(color));
-            webRequest.SendWebRequest();
+            UnityWebRequest.Get(GetQueryForColor(color))
+                .SendWebRequest();
         }
 
         public string GetQueryForColor(Color32 color)
