@@ -1,0 +1,10 @@
+{
+	"fixtures" : [
+		{
+			"name" : "Oppsk1",
+			"numberChannels" : 4,
+			"startingChannel" : 4,
+			"group" : ""
+		}
+	]
+}

@@ -1,5 +1,22 @@
 ﻿using UnityEngine;
 using DMXtable;
+using System.IO;
+
+
+[System.Serializable]
+public class FixtureDescription
+{
+    public string name;
+    public string group;
+    public int numberChannels;
+    public int startingChannel;
+}
+
+[System.Serializable]
+public class FixtureDescriptionArray
+{
+    public FixtureDescription[] fixtures;
+}
 
 public class DMXManager : MonoBehaviour
 {
@@ -10,6 +27,7 @@ public class DMXManager : MonoBehaviour
     Color _colorDelta;
     bool _reconnect = false;
     static DMXManager instance;
+    private const string defaultGroupName = "main";
 
     // Reconnection
     [SerializeField] private int checkConnectionPeriod = 3;
@@ -21,14 +39,23 @@ public class DMXManager : MonoBehaviour
         serial = new DMXserial();
         master = new DMXmaster();
 
-        AddCustomLightset();
+        LoadFixtures();
 
         InvokeRepeating(nameof(Reconnect), 0, checkConnectionPeriod);
     }
 
-    private void AddCustomLightset()
+    private void LoadFixtures()
     {
-        master.addFixtures(lightName, 4, 4, "main");
+        
+        string fixturesPath = Path.Combine(Application.streamingAssetsPath, "fixtures.json");
+        var jsonData = File.ReadAllText(fixturesPath);
+        var fixtureDescriptions = JsonUtility.FromJson<FixtureDescriptionArray>(jsonData);
+        foreach (var fixtureDescription in fixtureDescriptions.fixtures)
+        {
+            // add to default group if group name is blank
+            string groupName = string.IsNullOrEmpty(fixtureDescription.group) ? defaultGroupName : fixtureDescription.group;
+            master.addFixtures(fixtureDescription.name, fixtureDescription.numberChannels, fixtureDescription.startingChannel, groupName);
+        }
     }
 
     private string GetComPortName()
@@ -78,8 +105,6 @@ public class DMXManager : MonoBehaviour
         instance.SendColor(Random.ColorHSV(0, 1, 1, 1, 1, 1));
     }
 
-    [SerializeField] private string lightName = "Oppsk1";
-
     private void OnDisable()
     {
     }
@@ -88,11 +113,11 @@ public class DMXManager : MonoBehaviour
     /// Send the color to OPPSK - RGBW on channels 4-7
     /// </summary>
     /// <param name="color"></param>
-    public void SendColor(Color color)
+    public void SendColor(Color color, string name = defaultGroupName)
     {
         camera.backgroundColor = color;
         master.updateMainFade(Mathf.RoundToInt(SROptions.Current.FadeTime * 1000));
-        master.updateFixtures(lightName, color);
+        master.updateFixtures(name, color);
     }
 
     /// <summary>
