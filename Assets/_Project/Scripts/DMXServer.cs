@@ -32,9 +32,14 @@ namespace MMM.DMX
             var path = req.RawUrl;
             var endPoint = path.Contains("?") ? path.Substring(0, path.IndexOf('?')) : path;
 
-            if(endPoint.CompareTo("/dmx") == 0)
+            if(endPoint.CompareTo("/color") == 0)
             {
                 SetColorFromQuery(req.QueryString, res);
+            }
+
+            if(endPoint.CompareTo("/dmx") == 0)
+            {
+                SetDMXFromQuery(req.QueryString, res);
             }
 
             if(endPoint.CompareTo("/off") == 0)
@@ -65,6 +70,11 @@ namespace MMM.DMX
             {
                 res.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
             }
+        }
+
+        private void SetDMXFromQuery(NameValueCollection query, WebSocketSharp.Net.HttpListenerResponse res)
+        {
+
         }
 
         // check if color was updated in background thread
